@@ -1,0 +1,318 @@
+:root {
+    --bg-color: #0f172a;
+    --panel-bg: rgba(30, 41, 59, 0.7);
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --accent: #3b82f6;
+    --accent-hover: #2563eb;
+    --danger: #ef4444;
+    --danger-hover: #dc2626;
+    --border: rgba(255, 255, 255, 0.1);
+    --pointer-color: #facc15;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Outfit', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-image: 
+        radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.15), transparent 25%),
+        radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.15), transparent 25%);
+    overflow: hidden;
+}
+
+.app-container {
+    display: flex;
+    gap: 2rem;
+    max-width: 1400px;
+    width: 95%;
+    height: 85vh;
+    z-index: 10;
+}
+
+.panel {
+    background: var(--panel-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 2rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+}
+
+.controls-panel {
+    flex: 1;
+    min-width: 250px;
+}
+
+.wheel-panel {
+    flex: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    min-width: 400px;
+}
+
+.history-panel {
+    flex: 1;
+    min-width: 250px;
+}
+
+.history-panel h2 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-main);
+}
+
+.history-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+}
+
+.history-item-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.history-item .date {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+}
+
+#clear-history-btn {
+    margin-top: 1rem;
+    width: 100%;
+    background: var(--danger);
+}
+
+#clear-history-btn:hover {
+    background: var(--danger-hover);
+}
+
+h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(to right, #60a5fa, #c084fc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+p {
+    color: var(--text-muted);
+    margin-bottom: 2rem;
+}
+
+.input-group {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+input {
+    flex: 1;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+    color: var(--text-main);
+    font-family: inherit;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+input:focus {
+    border-color: var(--accent);
+}
+
+button {
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 0.75rem 1.5rem;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+button:hover {
+    background: var(--accent-hover);
+    transform: translateY(-2px);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+ul {
+    list-style: none;
+    overflow-y: auto;
+    flex: 1;
+    padding-right: 0.5rem;
+}
+
+/* Custom scrollbar */
+ul::-webkit-scrollbar {
+    width: 6px;
+}
+ul::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+}
+ul::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+}
+
+li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+.delete-btn {
+    background: transparent;
+    color: var(--text-muted);
+    padding: 0.25rem 0.5rem;
+    font-size: 1.25rem;
+}
+
+.delete-btn:hover {
+    background: transparent;
+    color: var(--danger);
+}
+
+.wheel-container {
+    position: relative;
+    width: 100%;
+    max-width: 500px;
+    aspect-ratio: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+canvas {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.1), 0 0 30px rgba(0, 0, 0, 0.5);
+}
+
+.pointer {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 30px;
+    height: 40px;
+    background-color: var(--pointer-color);
+    clip-path: polygon(50% 100%, 0 0, 100% 0);
+    z-index: 20;
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
+}
+
+#spin-btn {
+    position: absolute;
+    bottom: 2rem;
+    font-size: 1.25rem;
+    padding: 1rem 3rem;
+    border-radius: 50px;
+    box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.5);
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+
+#spin-btn:disabled {
+    background: #475569;
+    box-shadow: none;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(8px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.modal-content {
+    background: var(--panel-bg);
+    border: 1px solid var(--border);
+    padding: 3rem;
+    border-radius: 24px;
+    text-align: center;
+    transform: scale(0.9);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.modal-overlay.active .modal-content {
+    transform: scale(1);
+}
+
+#winner-name {
+    font-size: 4rem;
+    margin: 1rem 0 2rem;
+    background: linear-gradient(to right, #fbbf24, #f59e0b);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+@media (max-width: 900px) {
+    .app-container {
+        flex-direction: column;
+        height: auto;
+        padding: 2rem 0;
+    }
+    
+    .wheel-panel {
+        min-height: 400px;
+        min-width: auto;
+    }
+}

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wheel of Food</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <div class="panel controls-panel">
+            <h1>Wheel of Food 🍽️</h1>
+            <p>Add some restaurants and spin the wheel to decide lunch!</p>
+            
+            <div class="input-group">
+                <input type="text" id="restaurant-input" placeholder="Enter restaurant name..." autocomplete="off">
+                <button id="add-btn">Add</button>
+            </div>
+            
+            <ul id="restaurant-list">
+                <!-- List items will go here -->
+            </ul>
+        </div>
+        
+        <div class="panel wheel-panel">
+            <div class="wheel-container">
+                <canvas id="wheel" width="500" height="500"></canvas>
+                <div class="pointer"></div>
+            </div>
+            <button id="spin-btn">SPIN THE WHEEL!</button>
+        </div>
+
+        <div class="panel history-panel">
+            <h2>History</h2>
+            <p>Picked items get a malus</p>
+            <ul id="history-list">
+                <!-- History items will go here -->
+            </ul>
+            <button id="clear-history-btn">Clear History</button>
+        </div>
+    </div>
+
+    <!-- Winner Modal -->
+    <div class="modal-overlay" id="winner-modal">
+        <div class="modal-content">
+            <h2>🎉 We're going to... 🎉</h2>
+            <h1 id="winner-name">Restaurant Name</h1>
+            <button id="close-modal-btn">Awesome!</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
