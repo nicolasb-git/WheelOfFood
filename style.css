@@ -24,11 +24,13 @@ body {
     min-height: 100vh;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
+    padding: 2rem 0;
     background-image: 
         radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.15), transparent 25%),
         radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.15), transparent 25%);
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 
 .app-container {
@@ -37,7 +39,9 @@ body {
     max-width: 1400px;
     width: 95%;
     height: 85vh;
+    min-height: 600px;
     z-index: 10;
+    margin: auto 0;
 }
 
 .panel {
@@ -308,11 +312,31 @@ canvas {
     .app-container {
         flex-direction: column;
         height: auto;
-        padding: 2rem 0;
+        padding: 0;
+        margin: 0;
     }
     
     .wheel-panel {
-        min-height: 400px;
+        min-height: unset;
         min-width: auto;
+        padding: 2rem;
+        padding-bottom: 6rem;
+    }
+
+    .controls-panel, .history-panel {
+        min-width: auto;
+    }
+
+    #spin-btn {
+        bottom: 1.5rem;
+    }
+
+    .modal-content {
+        padding: 1.5rem;
+        width: 90%;
+    }
+
+    #winner-name {
+        font-size: 2.5rem;
     }
 }
