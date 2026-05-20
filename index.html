@@ -8,12 +8,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
 </head>
 <body>
+    <div class="top-bar">
+        <button id="auth-btn">Admin Login</button>
+    </div>
     <div class="app-container">
         <div class="panel controls-panel">
             <h1>Wheel of Food 🍽️</h1>
             <p>Add some restaurants and spin the wheel to decide lunch!</p>
             
-            <div class="input-group">
+            <div class="input-group admin-only">
                 <input type="text" id="restaurant-input" placeholder="Enter restaurant name..." autocomplete="off">
                 <button id="add-btn">Add</button>
             </div>
@@ -37,7 +40,7 @@
             <ul id="history-list">
                 <!-- History items will go here -->
             </ul>
-            <button id="clear-history-btn">Clear History</button>
+            <button id="clear-history-btn" class="admin-only">Clear History</button>
         </div>
     </div>
 
@@ -50,6 +53,24 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <!-- Login Modal -->
+    <div class="modal-overlay" id="login-modal">
+        <div class="modal-content">
+            <h2>Admin Login</h2>
+            <div class="login-form">
+                <input type="email" id="admin-email" placeholder="Email">
+                <input type="password" id="admin-password" placeholder="Password">
+                <div class="login-actions">
+                    <button id="submit-login-btn">Login</button>
+                    <button id="cancel-login-btn" class="secondary-btn">Cancel</button>
+                </div>
+            </div>
+            <p id="login-error" class="error-text"></p>
+        </div>
+    </div>
+
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="/script.js"></script>
 </body>
 </html>

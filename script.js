@@ -10,6 +10,37 @@ const closeModalBtn = document.getElementById('close-modal-btn');
 const historyList = document.getElementById('history-list');
 const clearHistoryBtn = document.getElementById('clear-history-btn');
 
+const authBtn = document.getElementById('auth-btn');
+const loginModal = document.getElementById('login-modal');
+const adminEmail = document.getElementById('admin-email');
+const adminPassword = document.getElementById('admin-password');
+const submitLoginBtn = document.getElementById('submit-login-btn');
+const cancelLoginBtn = document.getElementById('cancel-login-btn');
+const loginError = document.getElementById('login-error');
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let isAdmin = false;
+
+supabaseClient.auth.onAuthStateChange((event, session) => {
+    if (session) {
+        isAdmin = true;
+        document.body.classList.add('is-admin');
+        authBtn.textContent = 'Admin Logout';
+        loginModal.classList.remove('active');
+        renderHistory();
+        renderList();
+    } else {
+        isAdmin = false;
+        document.body.classList.remove('is-admin');
+        authBtn.textContent = 'Admin Login';
+        renderHistory();
+        renderList();
+    }
+});
+
 // Vibrant colors for the wheel segments
 const colors = [
     '#EF4444', '#F97316', '#F59E0B', '#10B981', 
@@ -17,22 +48,28 @@ const colors = [
     '#14B8A6', '#84CC16', '#06B6D4', '#F43F5E'
 ];
 
-let restaurants = JSON.parse(localStorage.getItem('restaurants')) || [
-    'Pizza', 'Sushi', 'Burger', 'Tacos', 'Salad', 'Thai'
-];
-
-let history = JSON.parse(localStorage.getItem('spinHistory')) || [];
+let restaurants = [];
+let history = [];
 
 let currentRotation = 0;
 let isSpinning = false;
 let spinAnimation;
 
-function saveRestaurants() {
-    localStorage.setItem('restaurants', JSON.stringify(restaurants));
+async function fetchRestaurants() {
+    const { data, error } = await supabaseClient.from('restaurants').select('name');
+    if (error) {
+        console.error('Error fetching restaurants:', error);
+        // Fallback
+        restaurants = ['Pizza', 'Sushi', 'Burger', 'Tacos', 'Salad', 'Thai'];
+    } else {
+        restaurants = data.map(r => r.name);
+    }
 }
 
-function saveHistory() {
-    localStorage.setItem('spinHistory', JSON.stringify(history));
+async function fetchHistory() {
+    const { data, error } = await supabaseClient.from('spin_history').select('*').order('created_at', { ascending: false });
+    if (error) console.error('Error fetching history:', error);
+    else history = data.map(h => ({ name: h.restaurant_name, date: h.created_at, id: h.id }));
 }
 
 function renderHistory() {
@@ -48,15 +85,16 @@ function renderHistory() {
         const nameSpan = document.createElement('span');
         nameSpan.textContent = entry.name;
         nameSpan.style.fontWeight = 'bold';
-        
-        const deleteBtn = document.createElement('button');
-        deleteBtn.innerHTML = '&times;';
-        deleteBtn.className = 'delete-btn';
-        deleteBtn.title = "Remove";
-        deleteBtn.onclick = () => removeHistoryItem(index);
-        
         topRow.appendChild(nameSpan);
-        topRow.appendChild(deleteBtn);
+        
+        if (isAdmin) {
+            const deleteBtn = document.createElement('button');
+            deleteBtn.innerHTML = '&times;';
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.title = "Remove";
+            deleteBtn.onclick = () => removeHistoryItem(index);
+            topRow.appendChild(deleteBtn);
+        }
         
         const dateSpan = document.createElement('span');
         dateSpan.className = 'date';
@@ -69,9 +107,13 @@ function renderHistory() {
     });
 }
 
-function removeHistoryItem(index) {
+async function removeHistoryItem(index) {
+    const item = history[index];
+    if (item.id) {
+        const { error } = await supabaseClient.from('spin_history').delete().match({ id: item.id });
+        if (error) console.error('Error removing history:', error);
+    }
     history.splice(index, 1);
-    saveHistory();
     renderHistory();
     drawWheel();
 }
@@ -92,32 +134,59 @@ function renderList() {
         const li = document.createElement('li');
         li.textContent = restaurant;
         
-        const deleteBtn = document.createElement('button');
-        deleteBtn.innerHTML = '&times;';
-        deleteBtn.className = 'delete-btn';
-        deleteBtn.title = "Remove";
-        deleteBtn.onclick = () => removeRestaurant(index);
+        if (isAdmin) {
+            const deleteBtn = document.createElement('button');
+            deleteBtn.innerHTML = '&times;';
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.title = "Remove";
+            deleteBtn.onclick = (e) => {
+                e.target.disabled = true;
+                removeRestaurant(index);
+            };
+            li.appendChild(deleteBtn);
+        }
         
-        li.appendChild(deleteBtn);
         restaurantList.appendChild(li);
     });
     drawWheel();
 }
 
-function addRestaurant() {
+async function addRestaurant() {
     const name = restaurantInput.value.trim();
     if (name && !restaurants.includes(name)) {
-        restaurants.push(name);
-        restaurantInput.value = '';
-        saveRestaurants();
-        renderList();
+        addBtn.disabled = true;
+        const { error } = await supabaseClient.from('restaurants').insert([{ name }]);
+        addBtn.disabled = false;
+        
+        if (error) {
+            console.error('Error adding restaurant:', error);
+            alert('Failed to add restaurant. Error: ' + error.message);
+        } else {
+            restaurants.push(name);
+            restaurantInput.value = '';
+            renderList();
+        }
     }
 }
 
-function removeRestaurant(index) {
-    restaurants.splice(index, 1);
-    saveRestaurants();
-    renderList();
+async function removeRestaurant(index) {
+    const name = restaurants[index];
+    try {
+        const { error } = await supabaseClient.from('restaurants').delete().eq('name', name);
+        
+        if (error) {
+            console.error('Error removing restaurant:', error);
+            alert('Failed to remove: ' + error.message);
+            renderList(); // Re-enable buttons
+        } else {
+            restaurants.splice(index, 1);
+            renderList();
+        }
+    } catch (e) {
+        console.error('Exception removing restaurant:', e);
+        alert('Error: ' + e.message);
+        renderList();
+    }
 }
 
 function drawWheel() {
@@ -205,6 +274,11 @@ function easeOutCubic(t) {
 }
 
 function spinWheel() {
+    if (!isAdmin) {
+        loginModal.classList.add('active');
+        return;
+    }
+    
     if (isSpinning || restaurants.length === 0) return;
     
     isSpinning = true;
@@ -240,7 +314,7 @@ function spinWheel() {
     spinAnimation = requestAnimationFrame(animate);
 }
 
-function announceWinner() {
+async function announceWinner() {
     // Normalize current rotation to 0 - 2PI
     const normalizedRotation = currentRotation % (2 * Math.PI);
     
@@ -268,8 +342,15 @@ function announceWinner() {
     const winner = restaurants[winningIndex];
     
     // Add to history
-    history.unshift({ name: winner, date: new Date().toISOString() });
-    saveHistory();
+    const { data, error } = await supabaseClient.from('spin_history').insert([{ restaurant_name: winner }]).select();
+    
+    if (error) {
+        console.error('Error saving history:', error);
+        history.unshift({ name: winner, date: new Date().toISOString() });
+    } else if (data && data.length > 0) {
+        history.unshift({ name: data[0].restaurant_name, date: data[0].created_at, id: data[0].id });
+    }
+    
     renderHistory();
     
     winnerNameEl.textContent = winner;
@@ -287,15 +368,62 @@ closeModalBtn.addEventListener('click', () => {
     drawWheel();
 });
 
+// Auth Event Listeners
+authBtn.addEventListener('click', async () => {
+    if (isAdmin) {
+        await supabaseClient.auth.signOut();
+    } else {
+        loginModal.classList.add('active');
+    }
+});
+
+cancelLoginBtn.addEventListener('click', () => {
+    loginModal.classList.remove('active');
+    loginError.textContent = '';
+});
+
+submitLoginBtn.addEventListener('click', async () => {
+    loginError.textContent = 'Logging in...';
+    const email = adminEmail.value;
+    const password = adminPassword.value;
+    
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+        email,
+        password
+    });
+    
+    if (error) {
+        loginError.textContent = error.message;
+    } else {
+        loginError.textContent = '';
+        adminEmail.value = '';
+        adminPassword.value = '';
+    }
+});
+
 if (clearHistoryBtn) {
-    clearHistoryBtn.addEventListener('click', () => {
-        history = [];
-        saveHistory();
-        renderHistory();
-        drawWheel();
+    clearHistoryBtn.addEventListener('click', async () => {
+        clearHistoryBtn.disabled = true;
+        // Delete all by matching an always true condition
+        const { error } = await supabaseClient.from('spin_history').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        clearHistoryBtn.disabled = false;
+        
+        if (error) {
+            console.error('Error clearing history:', error);
+        } else {
+            history = [];
+            renderHistory();
+            drawWheel();
+        }
     });
 }
 
 // Initial render
-renderHistory();
-renderList();
+async function init() {
+    await fetchRestaurants();
+    await fetchHistory();
+    renderHistory();
+    renderList();
+}
+
+init();
