@@ -56,20 +56,35 @@ let isSpinning = false;
 let spinAnimation;
 
 async function fetchRestaurants() {
-    const { data, error } = await supabaseClient.from('restaurants').select('name');
+    const { data, error } = await supabaseClient.from('restaurants').select('id, name');
     if (error) {
         console.error('Error fetching restaurants:', error);
         // Fallback
-        restaurants = ['Pizza', 'Sushi', 'Burger', 'Tacos', 'Salad', 'Thai'];
+        restaurants = [
+            { id: 'fallback-1', name: 'Pizza' },
+            { id: 'fallback-2', name: 'Sushi' },
+            { id: 'fallback-3', name: 'Burger' },
+            { id: 'fallback-4', name: 'Tacos' },
+            { id: 'fallback-5', name: 'Salad' },
+            { id: 'fallback-6', name: 'Thai' }
+        ];
     } else {
-        restaurants = data.map(r => r.name);
+        restaurants = data;
     }
 }
 
 async function fetchHistory() {
-    const { data, error } = await supabaseClient.from('spin_history').select('*').order('created_at', { ascending: false });
-    if (error) console.error('Error fetching history:', error);
-    else history = data.map(h => ({ name: h.restaurant_name, date: h.created_at, id: h.id }));
+    const { data, error } = await supabaseClient.from('spin_history').select('id, created_at, restaurant_id, restaurants(name)').order('created_at', { ascending: false });
+    if (error) {
+        console.error('Error fetching history:', error);
+    } else {
+        history = data.map(h => ({
+            name: h.restaurants?.name || 'Unknown Restaurant',
+            restaurant_id: h.restaurant_id,
+            date: h.created_at,
+            id: h.id
+        }));
+    }
 }
 
 function renderHistory() {
@@ -118,21 +133,21 @@ async function removeHistoryItem(index) {
     drawWheel();
 }
 
-function getWeight(name) {
-    const count = history.filter(h => h.name === name).length;
+function getWeight(restaurant) {
+    const count = history.filter(h => h.restaurant_id === restaurant.id).length;
     // Each time it's picked, its weight is divided by (count + 1).
     return 1 / (1 + count); 
 }
 
 function getTotalWeight() {
-    return restaurants.reduce((sum, name) => sum + getWeight(name), 0);
+    return restaurants.reduce((sum, r) => sum + getWeight(r), 0);
 }
 
 function renderList() {
     restaurantList.innerHTML = '';
     restaurants.forEach((restaurant, index) => {
         const li = document.createElement('li');
-        li.textContent = restaurant;
+        li.textContent = restaurant.name;
         
         if (isAdmin) {
             const deleteBtn = document.createElement('button');
@@ -153,16 +168,20 @@ function renderList() {
 
 async function addRestaurant() {
     const name = restaurantInput.value.trim();
-    if (name && !restaurants.includes(name)) {
+    if (name && !restaurants.some(r => r.name === name)) {
         addBtn.disabled = true;
-        const { error } = await supabaseClient.from('restaurants').insert([{ name }]);
+        const { data, error } = await supabaseClient.from('restaurants').insert([{ name }]).select();
         addBtn.disabled = false;
         
         if (error) {
             console.error('Error adding restaurant:', error);
             alert('Failed to add restaurant. Error: ' + error.message);
         } else {
-            restaurants.push(name);
+            if (data && data.length > 0) {
+                restaurants.push(data[0]);
+            } else {
+                restaurants.push({ id: null, name });
+            }
             restaurantInput.value = '';
             renderList();
         }
@@ -170,9 +189,9 @@ async function addRestaurant() {
 }
 
 async function removeRestaurant(index) {
-    const name = restaurants[index];
+    const restaurant = restaurants[index];
     try {
-        const { error } = await supabaseClient.from('restaurants').delete().eq('name', name);
+        const { error } = await supabaseClient.from('restaurants').delete().eq('id', restaurant.id);
         
         if (error) {
             console.error('Error removing restaurant:', error);
@@ -252,7 +271,7 @@ function drawWheel() {
         ctx.shadowOffsetX = 1;
         ctx.shadowOffsetY = 1;
         
-        ctx.fillText(restaurants[i], radius - 30, 0);
+        ctx.fillText(restaurants[i].name, radius - 30, 0);
         ctx.restore();
         
         currentAngleOffset += segmentAngle;
@@ -342,18 +361,24 @@ async function announceWinner() {
     const winner = restaurants[winningIndex];
     
     // Add to history
-    const { data, error } = await supabaseClient.from('spin_history').insert([{ restaurant_name: winner }]).select();
+    const { data, error } = await supabaseClient.from('spin_history').insert([{ restaurant_id: winner.id }]).select('*, restaurants(name)');
     
     if (error) {
         console.error('Error saving history:', error);
-        history.unshift({ name: winner, date: new Date().toISOString() });
+        history.unshift({ name: winner.name, restaurant_id: winner.id, date: new Date().toISOString() });
     } else if (data && data.length > 0) {
-        history.unshift({ name: data[0].restaurant_name, date: data[0].created_at, id: data[0].id });
+        const h = data[0];
+        history.unshift({
+            name: h.restaurants?.name || winner.name,
+            restaurant_id: h.restaurant_id,
+            date: h.created_at,
+            id: h.id
+        });
     }
     
     renderHistory();
     
-    winnerNameEl.textContent = winner;
+    winnerNameEl.textContent = winner.name;
     winnerModal.classList.add('active');
 }
 
