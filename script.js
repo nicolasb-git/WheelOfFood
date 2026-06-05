@@ -114,7 +114,7 @@ function renderHistory() {
         const dateSpan = document.createElement('span');
         dateSpan.className = 'date';
         const d = new Date(entry.date);
-        dateSpan.textContent = d.toLocaleDateString() + ' ' + d.toLocaleTimeString();
+        dateSpan.textContent = d.toLocaleDateString('fr-FR') + ' ' + d.toLocaleTimeString('fr-FR');
         
         li.appendChild(topRow);
         li.appendChild(dateSpan);
